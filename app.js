@@ -8,10 +8,14 @@ const DRESS_INFO={
 /* ===== END EDIT ===== */
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const pg=document.body.dataset.page;
+// Serve resized, modern-format (WebP/AVIF) photos via Netlify Image CDN. Falls back to originals when opened as a local file.
+const CDN=location.protocol.startsWith("http");
+const img=(src,w,h)=>CDN?`/.netlify/images?url=${encodeURIComponent("/"+src)}&w=${w}${h?`&h=${h}&fit=cover`:""}`:src;
+const srcset=(src,ws,r)=>CDN?ws.map(w=>`${img(src,w,r?Math.round(w*r):0)} ${w}w`).join(","):"";
 const L=[["index","Home"],["catering","Catering"],["dresses","Dresses"],["contact","Contact"]];
-document.body.insertAdjacentHTML("afterbegin",`<div class="sw"></div><nav><div class="wrap"><a href="index.html"><img src="images/logo.jpg" alt="EB Holdings"></a>
+document.body.insertAdjacentHTML("afterbegin",`<div class="sw"></div><nav><div class="wrap"><a href="index.html"><img src="${img("images/logo.jpg",160)}" width="75" height="50" alt="EB Holdings"></a>
 <button class="burger" aria-label="Menu">☰</button><ul id="menu">${L.map(l=>`<li><a href="${l[0]}.html" class="${l[0]==pg?"on":""}">${l[1]}</a></li>`).join("")}<li><button class="bk" id="bk">Basket<b id="cnt">0</b></button></li></ul></div></nav>`);
-document.body.insertAdjacentHTML("beforeend",`<footer><div class="wrap"><img src="images/logo.jpg" alt="EB Holdings"><div><a href="catering.html">Catering</a><a href="dresses.html">Dresses</a><a href="contact.html">Contact</a><br>© ${new Date().getFullYear()} EB Holdings</div></div></footer>
+document.body.insertAdjacentHTML("beforeend",`<footer><div class="wrap"><img src="${img("images/logo.jpg",200)}" loading="lazy" alt="EB Holdings"><div><a href="catering.html">Catering</a><a href="dresses.html">Dresses</a><a href="contact.html">Contact</a><br>© ${new Date().getFullYear()} EB Holdings</div></div></footer>
 <div class="lb" id="lb"><button class="x" aria-label="Close">×</button><button class="p" aria-label="Previous">‹</button><div id="lbc"></div><button class="n" aria-label="Next">›</button><div class="c" id="lbn"></div></div>
 <aside class="dr" id="dr"><h3>Your basket</h3><ul id="bl"></ul><p style="font-size:13px;color:#666;margin:10px 0">Sends your list to us on WhatsApp. No payment yet.</p><button class="btn" id="send">Send on WhatsApp</button><button class="btn s" style="margin-top:8px;background:#fff;color:#1c1c1c;border-color:#1c1c1c" id="cl">Close</button></aside><div class="toast" id="toast"></div>`);
 $(".burger").onclick=()=>$("#menu").classList.toggle("open");
@@ -29,13 +33,16 @@ $("#bl").onclick=e=>{const i=e.target.dataset.i;if(i!=null){const a=get();a.spli
 $("#send").onclick=()=>get().length?wa(text()):toast("Your basket is empty");draw();
 // Lightbox
 let items=[],cur=0;const lb=$("#lb");
-function show(i){cur=(i+items.length)%items.length;const it=items[cur];$("#lbc").innerHTML=it.src?`<img src="${it.src}" alt="${it.label}">`:`<div class="tile t"><span>${it.label}</span></div>`;$("#lbn").textContent=`${it.label}  (${cur+1} of ${items.length})`;lb.classList.add("on")}
+function show(i){cur=(i+items.length)%items.length;const it=items[cur];$("#lbc").innerHTML=it.src?`<img src="${img(it.src,1600)}" alt="${it.label}">`:`<div class="tile t"><span>${it.label}</span></div>`;$("#lbn").textContent=`${it.label}  (${cur+1} of ${items.length})`;lb.classList.add("on");[1,-1].forEach(d=>{const o=items[(cur+d+items.length)%items.length];if(o&&o.src)new Image().src=img(o.src,1600)})}
 lb.onclick=e=>{if(e.target.matches(".x,#lb"))lb.classList.remove("on");if(e.target.matches(".p"))show(cur-1);if(e.target.matches(".n"))show(cur+1)};
 addEventListener("keydown",e=>{if(!lb.classList.contains("on"))return;if(e.key=="Escape")lb.classList.remove("on");if(e.key=="ArrowLeft")show(cur-1);if(e.key=="ArrowRight")show(cur+1)});
 let sx=0;lb.ontouchstart=e=>sx=e.touches[0].clientX;lb.ontouchend=e=>{const d=e.changedTouches[0].clientX-sx;if(Math.abs(d)>50)show(cur+(d<0?1:-1))};
-// Auto-detect every photo: images/<dir>/1.jpg, 2.jpg ...
-async function probe(dir){const E=["jpg","jpeg","png","webp","JPG","JPEG","PNG"];const r=await Promise.all(Array.from({length:CONFIG.max},(_,i)=>new Promise(res=>{let k=0;const t=()=>{if(k>=E.length)return res(0);const im=new Image();im.onload=()=>res([i+1,E[k]]);im.onerror=()=>{k++;t()};im.src=`images/${dir}/${i+1}.${E[k]}`};t()})));return r.filter(Boolean)}
-const tile=(src,label,i)=>{const d=document.createElement("div");d.className="tile";d.tabIndex=0;d.innerHTML=(src?`<img loading="lazy" src="${src}" alt="${label}">`:"")+`<span>${label}</span>`;d.onclick=()=>show(i);d.onkeydown=e=>e.key=="Enter"&&show(i);return d};
+// Photo list comes from images/manifest.json (generated on deploy). Fallback: ask the server which files exist without downloading them.
+let man;const manifest=()=>man||(man=fetch("images/manifest.json").then(r=>r.ok?r.json():null).catch(()=>null));
+async function probe(dir){const m=await manifest();if(m&&m[dir])return m[dir];
+ const E=["jpeg","jpg","png","webp","JPG","JPEG","PNG"];
+ const r=await Promise.all(Array.from({length:CONFIG.max},async(_,i)=>{for(const x of E){try{if((await fetch(`images/${dir}/${i+1}.${x}`,{method:"HEAD"})).ok)return[i+1,x]}catch(e){}}return 0}));return r.filter(Boolean)}
+const tile=(src,label,i)=>{const d=document.createElement("div");d.className="tile";d.tabIndex=0;d.innerHTML=(src?`<img loading="${i<4?"eager":"lazy"}" decoding="async" width="400" height="500" src="${img(src,400,500)}" srcset="${srcset(src,[300,400,600,800],1.25)}" sizes="(max-width:520px) 100vw,(max-width:900px) 50vw,300px" alt="${label}">`:"")+`<span>${label}</span>`;d.onclick=()=>show(i);d.onkeydown=e=>e.key=="Enter"&&show(i);return d};
 async function gallery(el,dir,isDress){
  let nums=await probe(dir),ph=!nums.length;if(ph)nums=[[1,"jpg"],[2,"jpg"],[3,"jpg"],[4,"jpg"],[5,"jpg"],[6,"jpg"]];
  const all=nums.map(([n,x])=>{const f=DRESS_INFO[n]||{};return{src:ph?"":`images/${dir}/${n}.${x}`,label:isDress?(f.name||"Dress "+n):(ph?"Photo coming soon":"Catering "+n),cat:f.cat||"",price:f.price||"",n}});

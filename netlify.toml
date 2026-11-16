@@ -1,0 +1,9 @@
+[build]
+  publish = "."
+  command = "node scripts/manifest.cjs"
+
+# Let browsers keep photos for a day instead of re-checking every visit
+[[headers]]
+  for = "/images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400, stale-while-revalidate=604800"
