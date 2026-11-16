@@ -1,5 +1,5 @@
 /* ===== EDIT THIS PART ONLY ===== */
-const CONFIG={phone:"0728214859",email:"mustafashaun987.com",max:120};
+const CONFIG={phone:"+27728214859",email:"mustafashaun987.com",max:120};
 // Optional: give a dress a name, category and price by its photo number. Others show as "Dress N".
 const DRESS_INFO={
  // 1:{name:"Sunset Gown",cat:"Evening",price:"R1200"},
