@@ -1,7 +1,7 @@
 /* ===== YOUR SETTINGS. Edit this file only; it never gets overwritten by updates. ===== */
 const CONFIG={
- phone:"27000000000",            // WhatsApp number: country code + number, no + or spaces
- email:"info@ebholdings.com",
+ phone:"+27746001380",            // WhatsApp number: country code + number, no + or spaces
+ email:"mphitigole@gmail.com",
  hours:"Mon to Sat, 8am to 6pm", // shown on the Contact page and footer
  area:"Add your town or delivery area",
  catering:{count:49,ext:"jpeg"}, // count = how many photos are in images/catering, ext = jpeg, jpg, png or webp
@@ -13,6 +13,6 @@ const CONFIG={
 };
 // Optional: name, category and price for a dress by its photo number (remove the // to use)
 const DRESS_INFO={
- // 1:{name:"Sunset Gown",cat:"Evening",price:"R1200"},
+ 4:{name:"Sepedi Heritage Dress",cat:"Weddings/ Heritage",price:"R2000"},
  // 2:{name:"Garden Party",cat:"Wedding guest",price:"R900"},
 };
