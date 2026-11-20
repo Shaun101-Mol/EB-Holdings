@@ -4,8 +4,8 @@ const CONFIG={
  email:"mphitigole@gmail.com",
  hours:"Mon to Sat, 8am to 6pm", // shown on the Contact page and footer
  area:"Add your town or delivery area",
- catering:{count:49,ext:"jpeg"}, // count = how many photos are in images/catering, ext = jpeg, jpg, png or webp
- dresses:{count:6,ext:"jpeg"},   // same for images/dresses
+ catering:{count:59,ext:"jpeg"}, // count = how many photos are in images/catering, ext = jpeg, jpg, png or webp
+ dresses:{count:28,ext:"jpeg"},   // same for images/dresses
  sizes:["XS","S","M","L","XL","XXL"],
  currency:"R",
  tiers:{"Classic":150,"Premium":250,"Luxury":400},               // catering price per guest (CHANGE TO YOUR REAL PRICES)
